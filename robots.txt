@@ -1,1 +1,1 @@
-Sitemap: https://mi3nts.github.io/mints-aq-reports/sitemap.xml
+Sitemap: https://github.com/mi3nts/mints-aq-reports/sitemap.xml
