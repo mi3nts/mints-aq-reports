@@ -31,6 +31,7 @@ website:
       background: light
       search: true
       contents:
+        - test/data-download.ipynb
         - central_nodes.qmd
         - section: "Daily"
         - section: "Weekly"
