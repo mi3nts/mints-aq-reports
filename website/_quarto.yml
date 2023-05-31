@@ -32,6 +32,7 @@ website:
       search: true
       contents:
         - test/data-download.ipynb
+        - test/data-download__2.ipynb
         - central_nodes.qmd
         - section: "Daily"
         - section: "Weekly"
