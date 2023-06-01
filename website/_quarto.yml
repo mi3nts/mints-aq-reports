@@ -33,6 +33,7 @@ website:
       contents:
         - test/data-download.ipynb
         - test/data-download__2.ipynb
+        - test/pm_data.ipynb
         - central_nodes.qmd
         - section: "Daily"
         - section: "Weekly"
