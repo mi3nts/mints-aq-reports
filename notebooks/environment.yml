@@ -9,3 +9,4 @@ dependencies:
  - matplotlib
  - seaborn
  - more-itertools
+ - scikit-learn
