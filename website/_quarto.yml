@@ -34,6 +34,7 @@ website:
         - test/data-download.ipynb
         - test/data-download__2.ipynb
         - test/pm_data.ipynb
+        - test/MINTSOpenAirTimeSeriesWalkThroughPart1.ipynb
         - central_nodes.qmd
         - section: "Daily"
         - section: "Weekly"
