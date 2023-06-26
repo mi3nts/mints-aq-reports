@@ -1,0 +1,49 @@
+<mxfile host="app.diagrams.net" modified="2023-06-26T18:25:19.233Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" etag="Abh2gbw9jzxt7ZMAEFsQ" version="21.5.0" type="github">
+  <diagram name="Page-1" id="fktcLNoh3aOtd3US9ePM">
+    <mxGraphModel dx="2954" dy="1073" grid="1" gridSize="1" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="2336" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;container=0;" vertex="1" parent="1">
+          <mxGeometry x="111" y="82" width="1402" height="598" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-4" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;MINTS sensing systems&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="148" y="95" width="291" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-29" value="" style="group;fillColor=none;" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="114" y="144" width="465" height="496" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="rWycjQ3bLgIySJay0Uhn-29">
+          <mxGeometry x="36" width="439" height="496" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-6" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;Wired/cellular network sensing systems (mothership nodes)&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="rWycjQ3bLgIySJay0Uhn-29">
+          <mxGeometry x="69" y="18" width="396" height="61" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-15" value="" style="group;fillColor=none;" vertex="1" connectable="0" parent="rWycjQ3bLgIySJay0Uhn-29">
+          <mxGeometry x="47" y="256" width="391" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-7" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;(Embedded within mothership monitors)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="rWycjQ3bLgIySJay0Uhn-15">
+          <mxGeometry x="19" y="3" width="372" height="209" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-8" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;LoRaWAN gateways&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="rWycjQ3bLgIySJay0Uhn-15">
+          <mxGeometry width="313" height="61" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-20" value="" style="group;fillColor=none;" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="606.0038404327248" y="409" width="370.6436781609196" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-21" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-size: 18px; background-color: initial;&quot;&gt;(Sole systems:&lt;/span&gt;&lt;/div&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;Eg: Located at the roof top of NSERL)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="rWycjQ3bLgIySJay0Uhn-20">
+          <mxGeometry x="18.01081812035159" y="3" width="352.632860040568" height="209" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-22" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;LoRaWAN gateways&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="rWycjQ3bLgIySJay0Uhn-20">
+          <mxGeometry width="296.7045300878973" height="61" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-27" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1041.9967816091955" y="140" width="416.1446923597025" height="496" as="geometry" />
+        </mxCell>
+        <mxCell id="rWycjQ3bLgIySJay0Uhn-28" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;LoRaWAN sensing systems &lt;br&gt;(tertiary nodes)&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1063.001413116971" y="165" width="375.38336713995943" height="61" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
