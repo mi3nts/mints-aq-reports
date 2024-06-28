@@ -1,0 +1,136 @@
+temperature:
+  - WIMDA: airTemperature
+  - TMP117: temperature
+  - BME280V3: temperature
+  - BME280V2: temperature
+  - BME680: temperature
+  - BME688CNR: temperature
+  - BME280: temperature
+  - COZIRAEH2000: temperature
+  - D739SENSERTD1: temperature
+  - SCD30V2: temperature
+  - SCD30: temperature
+
+humidity:
+  - WIMDA: relativeHumidity
+  - BME280V3: humidity
+  - BME280V2: humidity
+  - BME680: humidity
+  - BME688CNR: humidity
+  - BME280: humidity
+  - COZIRAEH2000: humidity
+  - D739SENSERTD1: humidity
+  - SCD30V2: humidity
+  - SCD30: humidity
+
+pressure:
+  - WIMDA: barrometricPressureBars
+  - BME280V3: pressure
+  - BME280V2: pressure
+  - BME680: pressure
+  - BME688CNR: pressure
+  - BME280: pressure
+  - D739SENSERTD2: pressure
+
+pc0_1: 
+  - IPS7100: pc0_1
+  - IPS7100CNR: pc0_1
+
+pc0_3: 
+  - IPS7100: pc0_3
+  - IPS7100CNR: pc0_3
+
+pc0_5: 
+  - IPS7100: pc0_5
+  - IPS7100CNR: pc0_5
+
+pc1_0: 
+  - IPS7100: pc1_0
+  - IPS7100CNR: pc1_0
+
+pc2_5: 
+  - IPS7100: pc2_5
+  - IPS7100CNR: pc2_5
+
+pc5_0: 
+  - IPS7100: pc5_0
+  - IPS7100CNR: pc5_0
+
+pc10_0: 
+  - IPS7100: pc10_0
+  - IPS7100CNR: pc10_0
+
+pm0_1: 
+  - IPS7100: pm0_1
+  - IPS7100CNR: pm0_1
+
+pm0_3: 
+  - IPS7100: pm0_3
+  - IPS7100CNR: pm0_3
+
+pm0_5: 
+  - IPS7100: pm0_5
+  - IPS7100CNR: pm0_5
+
+pm1_0: 
+  - IPS7100: pm1_0
+  - IPS7100CNR: pm1_0
+
+pm2_5: 
+  - IPS7100: pm2_5
+  - IPS7100CNR: pm2_5
+
+pm5_0: 
+  - IPS7100: pm5_0
+  - IPS7100CNR: pm5_0
+
+pm10_0: 
+  - IPS7100: pm10_0
+  - IPS7100CNR: pm10_0
+
+co2: 
+  - COZIRAEH2000: co2Filtered
+  - SCD30V2: co2
+  - SCD30: co2
+
+ozone: 
+  - TB108L: ozone
+
+latitude:
+  - GPGGA: latitude
+  - GPSGPGGA2: latitudeCoordinate 
+  - GPSGPRMC2: latitudeCoordinate 
+  - GPGGAPL: latitudeCoordinate 
+  - GPRMCPL: latitudeCoordinate 
+  - GPGGALR: latitude
+  - PA1010D: latitudeCoordinate 
+
+longitude:
+  - GPGGA: longitude
+  - GPSGPGGA2: longitudeCoordinate 
+  - GPSGPRMC2: longitudeCoordinate 
+  - GPGGAPL: longitudeCoordinate 
+  - GPRMCPL: longitudeCoordinate 
+  - GPGGALR: longitude
+  - PA1010D: longitudeCoordinate 
+
+altitude:
+  - GPGGA: altitude
+  - GPSGPGGA2: altitude 
+  - GPGGAPL: altitude 
+  - GPGGALR: altitude
+  - PA1010D: altitude 
+
+rain:
+  - RG15: rainPerInterval
+
+windSpeed:
+  - WIMDA: windSpeedMetersPerSecond
+  - WIMWV: windSpeed
+
+dewPoint:
+  - WIMDA: dewPoint
+  - BME280V3: dewPoint
+  - BME280V2: dewPoint
+  - BME680: dewPoint
+  - BME280: dewPoint
