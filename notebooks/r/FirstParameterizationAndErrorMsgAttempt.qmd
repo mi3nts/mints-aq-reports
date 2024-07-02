@@ -1,0 +1,55 @@
+---
+title: "`r glue::glue('Example Time Series for {params$device}')`"
+execute:
+  echo: false
+author: "MINTS"
+date: "=6/21/2024"
+format: 
+  pdf:
+    code-fold: true
+params: 
+  alpha: "Null"
+  beta: "Null"
+  time_range: "-3d"
+  device: "Indoor IQ Node 01"
+---
+```{r}
+suppressPackageStartupMessages({
+  library(influxdbclient)  
+  library(dplyr)
+  library(lubridate)
+  library(openair)
+  library(latticeExtra)
+  library(png)
+  library(grid)
+  library(ggplot2)
+})
+
+# Initialize InfluxDB client
+client <- InfluxDBClient$new(
+  url = "http://mdash.circ.utdallas.edu:8086",
+  token = "4G3KpbuEGzN1zbo6V8UyF5Lk8MJ2BkUp69NiojUDyvVYtE-b9ACe_zb-1C4zkYYFB3431Tno7WMt3PAa4HVpMw==",
+  org = "MINTS"
+)
+
+# Fetch the parameters from the params object
+alpha <- params$alpha
+beta <- params$beta
+  
+
+# Construct the query string and parse the parameter values
+query1 <- paste0('from(bucket: "SharedAirDFW") |> range(start: ', params$time_range, ') |> filter(fn: (r) => r["_measurement"] == "', alpha, '") |> filter(fn: (r) => r["_field"] == "', beta, '") |> filter(fn: (r) => r["device_name"] == "', params$device, '") |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value") |> drop(columns: ["_start", "_stop"])')
+
+data1 <- client$query(query1)
+
+if (is.null(data1)) {
+  message("Queried data is not available.")
+  
+} else {
+  df1 <- as.data.frame(data1[[1]])
+  df1$date <- as.POSIXct(df1$`_time`, format="%Y-%m-%dT%H:%M:%OSZ", tz="UTC")
+  timePlot(df1, pollutant = params$beta, avg.time = "hour",
+         y.relation = "free")
+}
+  
+```
