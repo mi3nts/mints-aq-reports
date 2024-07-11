@@ -1,1 +1,18 @@
 /* css styles */
+
+@font-face {
+    font-family: 'Italic Montserrat';
+    src: url("assets/Montserrat-Italic-VariableFont_wght.ttf");
+
+    font-family: 'Montserrat';
+    src: url("assets/Montserrat-VariableFont_wght.ttf");
+
+}
+
+body{
+    font-family: 'Montserrat', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Italic Montserrat', sans-serif;
+}

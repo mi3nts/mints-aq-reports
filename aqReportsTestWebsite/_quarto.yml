@@ -1,17 +1,20 @@
 project:
   type: website
-
 website:
   title: "aqReportsTestWebsite"
+  favicon: "assets/thumbnail_MINTS.png"
+  
   navbar:
+    logo: "assets/thumbnail_MINTS.png"
     left:
+      
       - href: index.qmd
         text: Home
       - href: about.qmd
         text: About
       - href: Research.qmd
         text: Research
-
+    
 format:
   html:
     theme: cosmo
