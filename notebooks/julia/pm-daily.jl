@@ -1,7 +1,7 @@
+using PythonCall
 using CondaPkg
 CondaPkg.add("influxdb-client")
 CondaPkg.add("pandas")
-using PythonCall
 using ProgressMeter
 using Dates, TimeZones
 using CSV, DataFrames, JSON
@@ -37,12 +37,34 @@ client = influx_client.InfluxDBClient(url="http://mdash.circ.utdallas.edu:8086",
 query_api = client.query_api()
 
 
+
+
 d= DateTime(2024, 7, 1, 0, 0, 0)
 node = "vaLo Node 01"
 
-
 dstart = d - Minute(25)
 dend = d + Day(1) + Minute(25)
+
+
+# get the lat, lon, alt data from GPS
+query_gps = """
+from(bucket: "SharedAirDFW")
+  |> range(start: time(v: "$(dstart)Z"), stop: time(v: "$(dend)Z"))
+  |> filter(fn: (r) => r["device_name"] == "$(node)")
+  |> filter(fn: (r) => r["_measurement"] == "GPSGPGGA2")
+  |> filter(fn: (r) => r["_field"] == "latitudeCoordinate" or r["_field"] == "longitudeCoordinate" or r["_field"] == "altitude")
+  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+  |> keep(columns: ["_time", "latitudeCoordinate", "longitudeCoordinate", "altitude",])
+"""
+
+println(query_gps)
+
+pos = query_api.query_data_frame(query_gps)
+pos = pos.drop(["result", "table"], axis=1)
+
+
+
 
 query_ips = """
 from(bucket: "SharedAirDFW")
@@ -50,7 +72,7 @@ from(bucket: "SharedAirDFW")
   |> filter(fn: (r) => r["device_name"] == "$(node)")
   |> filter(fn: (r) => r["_measurement"] == "IPS7100")
   |> filter(fn: (r) => r["_field"] == "pm0_1" or r["_field"] == "pm0_3" or r["_field"] == "pm0_5" or r["_field"] == "pm1_0" or r["_field"] == "pm2_5" or r["_field"] == "pm5_0"  or r["_field"] == "pm10_0")
-  |> aggregateWindow(every: 1m, period: 10m, offset:-5m,  fn: mean, createEmpty: true)
+  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)
   |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
   |> keep(columns: ["_time", "pm0_1", "pm0_3", "pm0_5", "pm1_0", "pm2_5", "pm5_0", "pm10_0"])
 """
@@ -61,7 +83,7 @@ from(bucket: "SharedAirDFW")
   |> filter(fn: (r) => r["device_name"] == "$(node)")
   |> filter(fn: (r) => r["_measurement"] == "BME280V2")
   |> filter(fn: (r) => r["_field"] == "temperature" or r["_field"] == "pressure" or r["_field"] == "humidity" or r["_field"] == "dewPoint")
-  |> aggregateWindow(every: 1m, period: 10m, offset:-5m,  fn: mean, createEmpty: true)
+  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)
   |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
   |> keep(columns: ["_time", "temperature", "pressure", "humidity", "dewPoint"])
 """
@@ -72,7 +94,7 @@ from(bucket: "SharedAirDFW")
   |> filter(fn: (r) => r["device_name"] == "$(node)")
   |> filter(fn: (r) => r["_measurement"] == "RG15")
   |> filter(fn: (r) => r["_field"] == "rainPerInterval" or r["_field"] == "accumulation")
-  |> aggregateWindow(every: 1m, period: 10m, offset:-5m,  fn: mean, createEmpty: true)
+  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)
   |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
   |> keep(columns: ["_time", "rainPerInterval"])
 """
@@ -83,7 +105,7 @@ from(bucket: "SharedAirDFW")
   |> filter(fn: (r) => r["device_name"] == "$(node)")
   |> filter(fn: (r) => r["_measurement"] == "SCD30V2")
   |> filter(fn: (r) => r["_field"] == "co2" or r["_field"] == "temperature")
-  |> aggregateWindow(every: 1m, period: 10m, offset:-5m,  fn: mean, createEmpty: true)
+  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)
   |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
   |> keep(columns: ["_time", "co2"])
 """
@@ -122,7 +144,9 @@ end
 
 
 # position of vaLo Node 01
-pos = (;lat=32.967465, lon=-96.725647, alt=207.)
+# pos = (;lat=32.967465, lon=-96.725647, alt=207.)  <--- this we should generate from a query:
+
+
 
 df = process_df("ips.csv", Date(d))
 df = leftjoin(df, process_df("bme.csv", Date(d)), on=:datetime)
@@ -210,12 +234,17 @@ axr_sun = Axis(gl[4,2],
 hidedecorations!(axr_sun)
 linkyaxes!(axr_sun, ax_sun)
 
+
+ylow = floor(Int, minimum(df.pm0_1))
+yhigh = ceil(Int, maximum(df.pm0_1))
+ymid = (yhigh + ylow)/2
+
 ax_0_1 = Axis(gl[5,1],
           xticksvisible=false, xticklabelsvisible=false,
           xticks=(0:3:24),
           yticklabelsize=yticklabelsize,
           xticklabelsize=xticklabelsize,
-          yticks = ([floor(Int, minimum(df.pm0_1)), ceil(Int, maximum(df.pm0_1))]),
+          yticks = ([ylow, ymid, yhigh]),
           ylabelsize=15,
           xlabelsize=15,
           title="PM 0.1 (μg/m³)", titlefont=:regular, titlealign=:left, titlesize=titlesize, titlegap=titlegap,
@@ -228,12 +257,16 @@ hidedecorations!(axr_0_1)
 linkyaxes!(axr_0_1, ax_0_1)
 
 
+ylow = floor(Int, minimum(df.pm0_3))
+yhigh = ceil(Int, maximum(df.pm0_3))
+ymid = (yhigh + ylow)/2
+
 ax_0_3 = Axis(gl[6,1],
           xticksvisible=false, xticklabelsvisible=false,
           xticks=(0:3:24),
           yticklabelsize=yticklabelsize,
           xticklabelsize=xticklabelsize,
-          yticks = ([floor(Int, minimum(df.pm0_3)), ceil(Int, maximum(df.pm0_3))]),
+          yticks = ([ylow, ymid, yhigh]),
           ylabelsize=15,
           xlabelsize=15,
           title="PM 0.3 (μg/m³)", titlefont=:regular, titlealign=:left, titlesize=titlesize, titlegap=titlegap,
@@ -245,13 +278,17 @@ axr_0_3 = Axis(gl[6,2],
 hidedecorations!(axr_0_3)
 linkyaxes!(axr_0_3, ax_0_3)
 
+ylow = floor(Int, minimum(df.pm0_5))
+yhigh = ceil(Int, maximum(df.pm0_5))
+ymid = (yhigh + ylow)/2
+
 
 ax_0_5 = Axis(gl[7,1],
           xticksvisible=false, xticklabelsvisible=false,
           xticks=(0:3:24),
           yticklabelsize=yticklabelsize,
           xticklabelsize=xticklabelsize,
-          yticks = ([floor(Int, minimum(df.pm0_5)), ceil(Int, maximum(df.pm0_5))]),
+          yticks = ([ylow, ymid, yhigh]),
           ylabelsize=15,
           xlabelsize=15,
           title="PM 0.5 (μg/m³)", titlefont=:regular, titlealign=:left, titlesize=titlesize, titlegap=titlegap,
@@ -263,13 +300,17 @@ axr_0_5 = Axis(gl[7,2],
 hidedecorations!(axr_0_5)
 linkyaxes!(axr_0_5, ax_0_5)
 
+ylow = floor(Int, minimum(df.pm1_0))
+yhigh = ceil(Int, maximum(df.pm1_0))
+ymid = (yhigh + ylow)/2
+
 
 ax_1_0 = Axis(gl[8,1],
           xticksvisible=false, xticklabelsvisible=false,
           xticks=(0:3:24),
           yticklabelsize=yticklabelsize,
           xticklabelsize=xticklabelsize,
-          yticks = ([floor(Int, minimum(df.pm1_0)), ceil(Int, maximum(df.pm1_0))]),
+          yticks = ([ylow, ymid, yhigh]),
           ylabelsize=15,
           xlabelsize=15,
           title="PM 1 (μg/m³)", titlefont=:regular, titlealign=:left, titlesize=titlesize, titlegap=titlegap,
@@ -281,13 +322,17 @@ axr_1_0 = Axis(gl[8,2],
 hidedecorations!(axr_1_0)
 linkyaxes!(axr_1_0, ax_1_0)
 
+ylow = floor(Int, minimum(df.pm2_5))
+yhigh = ceil(Int, maximum(df.pm2_5))
+ymid = (yhigh + ylow)/2
+
 
 ax_2_5 = Axis(gl[9,1],
           xticksvisible=false, xticklabelsvisible=false,
           xticks=(0:3:24),
           yticklabelsize=yticklabelsize,
           xticklabelsize=xticklabelsize,
-          yticks = ([floor(Int, minimum(df.pm2_5)), ceil(Int, maximum(df.pm2_5))]),
+          yticks = ([ylow, ymid, yhigh]),
           ylabelsize=15,
           xlabelsize=15,
           title="PM 2.5 (μg/m³)", titlefont=:regular, titlealign=:left, titlesize=titlesize, titlegap=titlegap,
@@ -299,13 +344,16 @@ axr_2_5 = Axis(gl[9,2],
 hidedecorations!(axr_2_5)
 linkyaxes!(axr_2_5, ax_2_5)
 
+ylow = floor(Int, minimum(df.pm5_0))
+yhigh = ceil(Int, maximum(df.pm5_0))
+ymid = (yhigh + ylow)/2
 
 ax_5_0 = Axis(gl[10,1],
               xticksvisible=false, xticklabelsvisible=false,
               xticks=(0:3:24),
               yticklabelsize=yticklabelsize,
               xticklabelsize=xticklabelsize,
-              yticks = ([floor(Int, minimum(df.pm5_0)), ceil(Int, maximum(df.pm5_0))]),
+              yticks = ([ylow, ymid, yhigh]),
               ylabelsize=15,
               xlabelsize=15,
               title="PM 5 (μg/m³)", titlefont=:regular, titlealign=:left, titlesize=titlesize, titlegap=titlegap,
@@ -317,15 +365,20 @@ axr_5_0 = Axis(gl[10,2],
 hidedecorations!(axr_5_0)
 linkyaxes!(axr_5_0, ax_5_0)
 
+
+ylow = floor(Int, minimum(df.pm10_0))
+yhigh = ceil(Int, maximum(df.pm10_0))
+ymid = (yhigh + ylow)/2
+
 ax_10_0 = Axis(gl[11,1],
-          xlabel="$(Date(df.datetime[1])) (UTC)",
-          xticks=(0:3:24),
-          yticklabelsize=yticklabelsize,
-          xticklabelsize=xticklabelsize,
-          yticks = ([floor(Int, minimum(df.pm10_0)), ceil(Int, maximum(df.pm10_0))]),
-          ylabelsize=15,
-          xlabelsize=15,
-          title="PM 10 (μg/m³)", titlefont=:regular, titlealign=:left, titlesize=titlesize, titlegap=titlegap,
+               xlabel="$(Date(df.datetime[1])) (UTC)",
+               xticks=(0:3:24),
+               yticklabelsize=yticklabelsize,
+               xticklabelsize=xticklabelsize,
+               yticks = ([ylow, ymid, yhigh]),
+               ylabelsize=15,
+               xlabelsize=15,
+               title="PM 10 (μg/m³)", titlefont=:regular, titlealign=:left, titlesize=titlesize, titlegap=titlegap,
           );
 axr_10_0 = Axis(gl[11,2],
                 leftspinevisible=false, rightspinevisible=false,
