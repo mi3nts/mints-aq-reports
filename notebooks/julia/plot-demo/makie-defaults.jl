@@ -1,4 +1,4 @@
-montserrat_path = "../../font-files/montserrat"
+montserrat_path = "../../../font-files/montserrat"
 @assert ispath(montserrat_path)
 
 mints_colors = [

@@ -1,13 +1,9 @@
-using PythonCall
-using CondaPkg
-CondaPkg.add("influxdb-client")
-CondaPkg.add("pandas")
 using ProgressMeter
-using Dates, TimeZones
+using Dates, TimeZones, TimeZoneFinder
 using CSV, DataFrames, JSON
 using Statistics, LinearAlgebra
 using SolarGeometry
-
+using HTTP
 
 using CairoMakie
 include("./makie-defaults.jl")
@@ -31,11 +27,16 @@ update_theme!(
 include("./utils.jl")
 
 creds = JSON.parsefile("./credentials.json")
-influx_client = pyimport("influxdb_client")
-pandas = pyimport("pandas")
-client = influx_client.InfluxDBClient(url="http://mdash.circ.utdallas.edu:8086", token=creds["token"], org=creds["orgname"], bucket=creds["bucket"])
-query_api = client.query_api()
+token = creds["token"]
+org = creds["orgname"]
+bucket = creds["bucket"]
+url = "http://mdash.circ.utdallas.edu:8086/api/v2/query?org=$(org)"
 
+headers = Dict(
+    "Authorization" => "Token $(token)",
+    "Accept" => "application/csv",
+    "Content-type" => "application/vnd.flux",
+)
 
 
 
@@ -49,7 +50,7 @@ dend = d + Day(1) + Minute(25)
 # get the lat, lon, alt data from GPS
 query_gps = """
 from(bucket: "SharedAirDFW")
-  |> range(start: time(v: "$(dstart)Z"), stop: time(v: "$(dend)Z"))
+  |> range(start: time(v: "$(d)Z"), stop: time(v: "$(d + Day(1))Z"))
   |> filter(fn: (r) => r["device_name"] == "$(node)")
   |> filter(fn: (r) => r["_measurement"] == "GPSGPGGA2")
   |> filter(fn: (r) => r["_field"] == "latitudeCoordinate" or r["_field"] == "longitudeCoordinate" or r["_field"] == "altitude")
@@ -58,103 +59,109 @@ from(bucket: "SharedAirDFW")
   |> keep(columns: ["_time", "latitudeCoordinate", "longitudeCoordinate", "altitude",])
 """
 
-println(query_gps)
+resp = HTTP.post(url, headers=headers, body=query_gps)
+df = CSV.read(IOBuffer(String(resp.body)), DataFrame)
+df = df[:, Not([:Column1, :result, :table, :_time])]
+dropmissing!(df)
+pos = (;lat=mean(df.latitudeCoordinate), lon=mean(df.longitudeCoordinate), alt=mean(df.altitude))
 
-pos = query_api.query_data_frame(query_gps)
-pos = pos.drop(["result", "table"], axis=1)
+# get the time zone:
+tzone = timezone_at(pos.lat, pos.lon)
 
 
 
 
-query_ips = """
-from(bucket: "SharedAirDFW")
-  |> range(start: time(v: "$(dstart)Z"), stop: time(v: "$(dend)Z"))
-  |> filter(fn: (r) => r["device_name"] == "$(node)")
-  |> filter(fn: (r) => r["_measurement"] == "IPS7100")
-  |> filter(fn: (r) => r["_field"] == "pm0_1" or r["_field"] == "pm0_3" or r["_field"] == "pm0_5" or r["_field"] == "pm1_0" or r["_field"] == "pm2_5" or r["_field"] == "pm5_0"  or r["_field"] == "pm10_0")
-  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)
-  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-  |> keep(columns: ["_time", "pm0_1", "pm0_3", "pm0_5", "pm1_0", "pm2_5", "pm5_0", "pm10_0"])
-"""
 
-query_bme = """
-from(bucket: "SharedAirDFW")
-  |> range(start: time(v: "$(dstart)Z"), stop: time(v: "$(dend)Z"))
-  |> filter(fn: (r) => r["device_name"] == "$(node)")
-  |> filter(fn: (r) => r["_measurement"] == "BME280V2")
-  |> filter(fn: (r) => r["_field"] == "temperature" or r["_field"] == "pressure" or r["_field"] == "humidity" or r["_field"] == "dewPoint")
-  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)
-  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-  |> keep(columns: ["_time", "temperature", "pressure", "humidity", "dewPoint"])
-"""
+d = ZonedDateTime(d, tzone)
+dstart = d - Minute(25)
+dend = d + Day(1) + Minute(25)
 
-query_rg15 = """
-from(bucket: "SharedAirDFW")
-  |> range(start: time(v: "$(dstart)Z"), stop: time(v: "$(dend)Z"))
-  |> filter(fn: (r) => r["device_name"] == "$(node)")
-  |> filter(fn: (r) => r["_measurement"] == "RG15")
-  |> filter(fn: (r) => r["_field"] == "rainPerInterval" or r["_field"] == "accumulation")
-  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)
-  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-  |> keep(columns: ["_time", "rainPerInterval"])
-"""
+function process_df(resp, tzone, d)
+    df = CSV.read(IOBuffer(String(resp.body)), DataFrame)
 
-query_scd30 = """
-from(bucket: "SharedAirDFW")
-  |> range(start: time(v: "$(dstart)Z"), stop: time(v: "$(dend)Z"))
-  |> filter(fn: (r) => r["device_name"] == "$(node)")
-  |> filter(fn: (r) => r["_measurement"] == "SCD30V2")
-  |> filter(fn: (r) => r["_field"] == "co2" or r["_field"] == "temperature")
-  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)
-  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-  |> keep(columns: ["_time", "co2"])
-"""
-
-let
-    df_ips = query_api.query_data_frame(query_ips)
-    df_ips = df_ips.drop(["result", "table"], axis=1)
-    df_ips.to_csv("ips.csv")
-
-    df_bme = query_api.query_data_frame(query_bme)
-    df_bme = df_bme.drop(["result", "table"], axis=1)
-    df_bme.to_csv("bme.csv")
-
-    df_rg = query_api.query_data_frame(query_rg15)
-    df_rg = df_rg.drop(["result", "table"], axis=1)
-    df_rg.to_csv("rg.csv")
-
-    df_scd = query_api.query_data_frame(query_scd30)
-    df_scd = df_scd.drop(["result", "table"], axis=1)
-    df_scd.to_csv("scd.csv")
-end
-
-function process_df(df_path, date)
-    df = CSV.read(df_path, DataFrame)
-    df = df[:, Not(:Column1)]
+    df = df[:, Not([:Column1, :result, :table])]
     rename!(df, :_time => :datetime)
-    df.datetime = parse_datetime.(df.datetime)
-
-    # keep only relevant days since we padded the data
-    idx_keep = [Date(di) == date for di ∈ df.datetime]
+    df.datetime = parse_datetime.(df.datetime, tzone)
+    idx_keep = [Date(di) == Date(d) for di in df.datetime]
     df = df[idx_keep, :]
+
     dropmissing!(df)
 
     return df
 end
 
 
-# position of vaLo Node 01
-# pos = (;lat=32.967465, lon=-96.725647, alt=207.)  <--- this we should generate from a query:
+query_ips = """
+from(bucket: "SharedAirDFW")
+  |> range(start: time(v: "$(dstart)"), stop: time(v: "$(dend)"))
+  |> filter(fn: (r) => r["device_name"] == "$(node)")
+  |> filter(fn: (r) => r["_measurement"] == "IPS7100")
+  |> filter(fn: (r) => r["_field"] == "pm0_1" or r["_field"] == "pm0_3" or r["_field"] == "pm0_5" or r["_field"] == "pm1_0" or r["_field"] == "pm2_5" or r["_field"] == "pm5_0"  or r["_field"] == "pm10_0")
+  |> aggregateWindow(every: 1m, period: 5m, offset:-150s,  fn: mean, createEmpty: true)
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+  |> keep(columns: ["_time", "pm0_1", "pm0_3", "pm0_5", "pm1_0", "pm2_5", "pm5_0", "pm10_0"])
+"""
+
+query_bme = """
+from(bucket: "SharedAirDFW")
+  |> range(start: time(v: "$(dstart)"), stop: time(v: "$(dend)"))
+  |> filter(fn: (r) => r["device_name"] == "$(node)")
+  |> filter(fn: (r) => r["_measurement"] == "BME280V2")
+  |> filter(fn: (r) => r["_field"] == "temperature" or r["_field"] == "pressure" or r["_field"] == "humidity" or r["_field"] == "dewPoint")
+  |> aggregateWindow(every: 1m, period: 5m, offset:-150s,  fn: mean, createEmpty: true)
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+  |> keep(columns: ["_time", "temperature", "pressure", "humidity", "dewPoint"])
+"""
+
+query_rg15 = """
+from(bucket: "SharedAirDFW")
+  |> range(start: time(v: "$(dstart)"), stop: time(v: "$(dend)"))
+  |> filter(fn: (r) => r["device_name"] == "$(node)")
+  |> filter(fn: (r) => r["_measurement"] == "RG15")
+  |> filter(fn: (r) => r["_field"] == "rainPerInterval" or r["_field"] == "accumulation")
+  |> aggregateWindow(every: 1m, period: 5m, offset:-150s,  fn: mean, createEmpty: true)
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+  |> keep(columns: ["_time", "rainPerInterval"])
+"""
+
+query_scd30 = """
+from(bucket: "SharedAirDFW")
+  |> range(start: time(v: "$(dstart)"), stop: time(v: "$(dend)"))
+  |> filter(fn: (r) => r["device_name"] == "$(node)")
+  |> filter(fn: (r) => r["_measurement"] == "SCD30V2")
+  |> filter(fn: (r) => r["_field"] == "co2" or r["_field"] == "temperature")
+  |> aggregateWindow(every: 1m, period: 5m, offset:-150s,  fn: mean, createEmpty: true)
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+  |> keep(columns: ["_time", "co2"])
+"""
+
+
+df = DataFrame()
+
+let
+    resp = HTTP.post(url, headers=headers, body=query_ips)
+    df_ips = process_df(resp, tzone, d)
+
+    resp = HTTP.post(url, headers=headers, body=query_bme)
+    df_bme = process_df(resp, tzone, d)
+
+    resp = HTTP.post(url, headers=headers, body=query_rg15)
+    df_rg = process_df(resp, tzone, d)
+
+    resp = HTTP.post(url, headers=headers, body=query_scd30)
+    df_scd = process_df(resp, tzone, d)
+
+    global df = df_ips
+    df = leftjoin(df, df_bme, on=:datetime)
+    df = leftjoin(df, df_rg, on=:datetime)
+    df = leftjoin(df, df_scd, on=:datetime)
+end
 
 
 
-df = process_df("ips.csv", Date(d))
-df = leftjoin(df, process_df("bme.csv", Date(d)), on=:datetime)
-df = leftjoin(df, process_df("rg.csv", Date(d)), on=:datetime)
-df = leftjoin(df, process_df("scd.csv", Date(d)), on=:datetime)
 
 # add in solar elevation
-df.sol_el = [solar_azimuth_altitude(df.datetime[i], pos.lat, pos.lon, pos.alt)[2] for i in 1:nrow(df)]
+df.sol_el = [solar_azimuth_altitude(DateTime(astimezone(df.datetime[i], tz"UTC")), pos.lat, pos.lon, pos.alt)[2] for i in 1:nrow(df)]
 df.sol_zenith = 90 .- df.sol_el
 
 # add in dt in hours
@@ -371,7 +378,7 @@ yhigh = ceil(Int, maximum(df.pm10_0))
 ymid = (yhigh + ylow)/2
 
 ax_10_0 = Axis(gl[11,1],
-               xlabel="$(Date(df.datetime[1])) (UTC)",
+               xlabel="$(Date(df.datetime[1])) (local)",
                xticks=(0:3:24),
                yticklabelsize=yticklabelsize,
                xticklabelsize=xticklabelsize,
@@ -402,61 +409,63 @@ ylims!(axr_sun, 0, 90)
 # plot temperature
 l_t = lines!(ax_temp, df.dt, df.temperature, color=mints_colors[2], linewidth=2, label="Temperature")
 l_tt = lines!(ax_temp, df.dt, df.dewPoint, color=mints_colors[2], linewidth=1, linestyle=:dash, label="Dew Point")
-density!(axr_temp, df.temperature, direction = :y, color=(mints_colors[2], 0.5), strokecolor=mints_colors[2], strokewidth=2)
+density!(axr_temp, df.temperature[.!(ismissing.(df.temperature))], direction = :y, color=(mints_colors[2], 0.5), strokecolor=mints_colors[2], strokewidth=2)
+# density!(axr_temp, df.dewPoint[.!(ismissing.(df.dewPoint))], direction = :y, color=(mints_colors[2], 0.5), strokecolor=mints_colors[2], strokewidth=2, linestyle=:dash)
+
 ylims!(ax_temp, 0, 50)
 ylims!(axr_temp, 0, 50)
 
 # plot humidity
 l_h = lines!(ax_humidity, df.dt, df.humidity, color=crain, linewidth=2)
-density!(axr_humidity, df.humidity, direction = :y, color=(crain, 0.5), strokecolor=crain, strokewidth=2)
+density!(axr_humidity, df.humidity[.!(ismissing.(df.humidity))], direction = :y, color=(crain, 0.5), strokecolor=crain, strokewidth=2)
 ylims!(ax_humidity, 0, 100)
 ylims!(axr_humidity, 0, 100)
 
 # plot rainfall
 l_r = lines!(ax_rainfall, df.dt, df.rainPerInterval, color=(:purple, 0.75), linewidth=2)
-density!(axr_rainfall, df.rainPerInterval, direction = :y, color=(:purple, 0.5), strokecolor=:purple, strokewidth=2)
+density!(axr_rainfall, df.rainPerInterval[.!(ismissing.(df.rainPerInterval))], direction = :y, color=(:purple, 0.5), strokecolor=:purple, strokewidth=2)
 ylims!(ax_rainfall, 0, 8)
 ylims!(axr_rainfall, 0, 8)
 
 # plot PM 0.1
 lines!(ax_0_1, df.dt, df.pm0_1, color=:gray)
-density!(axr_0_1, df.pm0_1, direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
+density!(axr_0_1, df.pm0_1[.!(ismissing.(df.pm0_1))], direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
 ylims!(ax_0_1, floor(Int, minimum(df.pm0_1)), ceil(Int, maximum(df.pm0_1)))
 ylims!(axr_0_1, floor(Int, minimum(df.pm0_1)), ceil(Int, maximum(df.pm0_1)))
 
 # plot PM 0.3
 lines!(ax_0_3, df.dt, df.pm0_3, color=:gray)
-density!(axr_0_3, df.pm0_3, direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
+density!(axr_0_3, df.pm0_3[.!(ismissing.(df.pm0_3))], direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
 ylims!(ax_0_3, floor(Int, minimum(df.pm0_3)), ceil(Int, maximum(df.pm0_3)))
 ylims!(axr_0_3, floor(Int, minimum(df.pm0_3)), ceil(Int, maximum(df.pm0_3)))
 
 # plot PM 0.5
 lines!(ax_0_5, df.dt, df.pm0_5, color=:gray)
-density!(axr_0_5, df.pm0_5, direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
+density!(axr_0_5, df.pm0_5[.!(ismissing.(df.pm0_5))], direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
 ylims!(ax_0_5, floor(Int, minimum(df.pm0_5)), ceil(Int, maximum(df.pm0_5)))
 ylims!(axr_0_5, floor(Int, minimum(df.pm0_5)), ceil(Int, maximum(df.pm0_5)))
 
 # plot PM 1.0
 lines!(ax_1_0, df.dt, df.pm1_0, color=:gray)
-density!(axr_1_0, df.pm1_0, direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
+density!(axr_1_0, df.pm1_0[.!(ismissing.(df.pm1_0))], direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
 ylims!(ax_1_0, floor(Int, minimum(df.pm1_0)), ceil(Int, maximum(df.pm1_0)))
 ylims!(axr_1_0, floor(Int, minimum(df.pm1_0)), ceil(Int, maximum(df.pm1_0)))
 
 # plot PM 2.5
 lines!(ax_2_5, df.dt, df.pm2_5, color=:gray)
-density!(axr_2_5, df.pm2_5, direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
+density!(axr_2_5, df.pm2_5[.!(ismissing.(df.pm2_5))], direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
 ylims!(ax_2_5, floor(Int, minimum(df.pm2_5)), ceil(Int, maximum(df.pm2_5)))
 ylims!(axr_2_5, floor(Int, minimum(df.pm2_5)), ceil(Int, maximum(df.pm2_5)))
 
 # plot PM 5.0
 lines!(ax_5_0, df.dt, df.pm5_0, color=:gray)
-density!(axr_5_0, df.pm5_0, direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
+density!(axr_5_0, df.pm5_0[.!(ismissing.(df.pm5_0))], direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
 ylims!(ax_5_0, floor(Int, minimum(df.pm5_0)), ceil(Int, maximum(df.pm5_0)))
 ylims!(axr_5_0, floor(Int, minimum(df.pm5_0)), ceil(Int, maximum(df.pm5_0)))
 
 # plot PM 10.0
 lines!(ax_10_0, df.dt, df.pm10_0, color=:gray)
-density!(axr_10_0, df.pm10_0, direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
+density!(axr_10_0, df.pm10_0[.!(ismissing.(df.pm10_0))], direction = :y, color=(:gray, 0.5), strokecolor=:gray, strokewidth=2)
 ylims!(ax_10_0, floor(Int, minimum(df.pm10_0)), ceil(Int, maximum(df.pm10_0)))
 ylims!(axr_10_0, floor(Int, minimum(df.pm10_0)), ceil(Int, maximum(df.pm10_0)))
 
