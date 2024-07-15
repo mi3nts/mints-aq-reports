@@ -402,7 +402,7 @@ xlims!(ax_10_0, 0, 24)
 # plot solar elevation
 l_s = lines!(ax_sun, df.dt, df.sol_el, color=cline, linewidth=3)
 band!(ax_sun, df.dt, zeros(nrow(df)), df.sol_el, color=cfill)
-density!(axr_sun, df.sol_el[df.sol_el .> 0], direction = :y, color=(cline, 0.5), strokecolor=cline, strokewidth=2)
+density!(axr_sun, df.sol_el[df.sol_el .≥ 0], direction = :y, color=(cline, 0.5), strokecolor=cline, strokewidth=2)
 ylims!(ax_sun, 0, 90)
 ylims!(axr_sun, 0, 90)
 
