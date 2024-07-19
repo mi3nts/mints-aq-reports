@@ -1,0 +1,12 @@
+Organization,Pollutant,Time Period,Standard (µg/m³)
+EPA,PM2.5,24-hour,35
+EPA,PM2.5,annual,9
+EPA,PM10,24-hour,150
+EPA,PM10,annual,50
+WHO,PM2.5,24-hour,15
+WHO,PM2.5,annual,5
+WHO,PM10,24-hour,45
+WHO,PM10,annual,15
+EU,PM2.5,annual,25
+EU,PM10,24-hour,50
+EU,PM10,annual,40
