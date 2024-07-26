@@ -10,7 +10,8 @@ format:
 params: 
   alpha: "Null"
   beta: "Null"
-  time_range: "-3d"
+  time_start: "Null"
+  time_end: "Null"
   device: "Indoor IQ Node 01"
 ---
 ```{r}
@@ -38,7 +39,9 @@ beta <- params$beta
   
 
 # Construct the query string and parse the parameter values
-query1 <- paste0('from(bucket: "SharedAirDFW") |> range(start: ', params$time_range, ') |> filter(fn: (r) => r["_measurement"] == "', alpha, '") |> filter(fn: (r) => r["_field"] == "', beta, '") |> filter(fn: (r) => r["device_name"] == "', params$device, '") |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value") |> drop(columns: ["_start", "_stop"])')
+query1 <- paste0('from(bucket: "SharedAirDFW") |> range(start: ', params$time_start, ', stop: ', params$time_end, ') |> filter(fn: (r) => r["_measurement"] == "', alpha, '") |> filter(fn: (r) => r["_field"] == "', beta, '") |> filter(fn: (r) => r["device_name"] == "', params$device, '") |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value") |> drop(columns: ["_start", "_stop"])')
+
+
 
 data1 <- client$query(query1)
 
