@@ -1,0 +1,37 @@
+# mints.mplstyle
+
+# Font settings
+#Use Montserrat as the font
+font.family: Montserrat
+font.size: 20
+
+# Axis settings
+axes.labelsize: 17
+xtick.labelsize: 13
+ytick.labelsize: 13
+xtick.major.size: 3
+ytick.major.size: 3
+xtick.minor.visible: true
+ytick.minor.visible: true
+xtick.minor.size: 1
+ytick.minor.size: 1
+#grid.color: lightgrey
+#grid.major.color: black
+#grid.minor.color: lightgrey
+grid.alpha: 0.5
+axes.grid: True
+grid.linewidth: 2
+axes.grid.which: both
+axes.titleweight: bold
+axes.titlesize: 25
+                
+# Set colour rotation
+axes.prop_cycle: cycler('color', ['3cd184', 'f97171', '1e81b0', '66beb2', 'f99192', '8ad6cc', '3d6647', '000080'])
+
+#Set colour map
+image.cmap : viridis
+
+# Colorbar settings
+#colorbar.labelsize: 13
+
+
