@@ -1,0 +1,2 @@
+[nbdev]
+fastlite = fastlite._modidx:d

@@ -1,0 +1,2 @@
+[nbdev]
+sqlite_minutils = sqlite_minutils._modidx:d
