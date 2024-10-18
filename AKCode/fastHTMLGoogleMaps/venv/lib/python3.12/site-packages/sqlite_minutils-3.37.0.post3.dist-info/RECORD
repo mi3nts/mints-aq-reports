@@ -1,0 +1,15 @@
+sqlite_minutils-3.37.0.post3.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+sqlite_minutils-3.37.0.post3.dist-info/LICENSE,sha256=xx0jnfkXJvxRnG63LTGOxlggYnIysveWIZ6H3PNdCrQ,11357
+sqlite_minutils-3.37.0.post3.dist-info/METADATA,sha256=c3FTyrLvpo7WLiv5sKt7hfiL51fys2ohaI8aT0ZPovQ,5356
+sqlite_minutils-3.37.0.post3.dist-info/RECORD,,
+sqlite_minutils-3.37.0.post3.dist-info/WHEEL,sha256=yQN5g4mg4AybRjkgi-9yy4iQEFibGQmlz78Pik5Or-A,92
+sqlite_minutils-3.37.0.post3.dist-info/entry_points.txt,sha256=phFmkrmkwXk1sSoCvPcjdV1p8BvWtwEfUgv92tGUttw,52
+sqlite_minutils-3.37.0.post3.dist-info/top_level.txt,sha256=KiD74wHKnhhUh45XMzLwDBWybr9Y0s-Xm8F005ylU2s,16
+sqlite_minutils/__init__.py,sha256=FotJnyswjyQfFKirKKikbw765QZq4UjX6PdkNUqPCUA,48
+sqlite_minutils/__pycache__/__init__.cpython-312.pyc,,
+sqlite_minutils/__pycache__/_modidx.cpython-312.pyc,,
+sqlite_minutils/__pycache__/db.cpython-312.pyc,,
+sqlite_minutils/__pycache__/utils.cpython-312.pyc,,
+sqlite_minutils/_modidx.py,sha256=2Vl7UPD4v7k3jQs-RMCo7gczVUHK7che8_Js_jzLjpk,368
+sqlite_minutils/db.py,sha256=jjinLr7ybx44m9toGg6cSPhQuPMNooLHSpw6IQRh8xI,143076
+sqlite_minutils/utils.py,sha256=YAbp4iqHkJhXNbh8Z_nPO5B0T1lHLEblsyIqnlzkYTc,15164

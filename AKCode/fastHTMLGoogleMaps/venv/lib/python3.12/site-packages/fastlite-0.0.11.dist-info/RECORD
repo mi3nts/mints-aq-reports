@@ -1,0 +1,15 @@
+fastlite-0.0.11.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+fastlite-0.0.11.dist-info/LICENSE,sha256=xx0jnfkXJvxRnG63LTGOxlggYnIysveWIZ6H3PNdCrQ,11357
+fastlite-0.0.11.dist-info/METADATA,sha256=0TXpKX6fIn5uaLqqs0MLc7NZN6t4rzEy0I-ddkuxdVQ,11308
+fastlite-0.0.11.dist-info/RECORD,,
+fastlite-0.0.11.dist-info/WHEEL,sha256=yQN5g4mg4AybRjkgi-9yy4iQEFibGQmlz78Pik5Or-A,92
+fastlite-0.0.11.dist-info/entry_points.txt,sha256=9Bw6xqVfdQgRJ-AZ9E64W4UreBvw7Lr9om1Ebw0wuB8,38
+fastlite-0.0.11.dist-info/top_level.txt,sha256=uZIDfrxOHZQrAcmr8ggBJWL7IC8Ch1o0_4-ywL31i2g,9
+fastlite/__init__.py,sha256=4rBplfR1S4V73AhAzweNNh0cjiW9p_VPytQlyLVl9Y8,61
+fastlite/__pycache__/__init__.cpython-312.pyc,,
+fastlite/__pycache__/_modidx.cpython-312.pyc,,
+fastlite/__pycache__/core.cpython-312.pyc,,
+fastlite/__pycache__/kw.cpython-312.pyc,,
+fastlite/_modidx.py,sha256=FeyzZHKwaaxqRytF4QfzjElMn7quphT1NAEGjllh4rw,4884
+fastlite/core.py,sha256=1K8c64xs9_F5NUGnjtWt1ZE1B9vPOIObH_Em-62Qeik,8210
+fastlite/kw.py,sha256=irYEh8ASjMGu0Let13v8CKjGHd8vFAybGYMD5j0mIrc,10459
